@@ -1,19 +1,20 @@
+
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.db
-
-# Python virtual environments
+*.py[cod]
 .venv/
 venv/
 
-# Node
+# Environment variables
+.env
+
+# Telethon session
+*.session
+*.session-journal
+
+# Frontend
 node_modules/
+dist/
 
 # macOS
 .DS_Store
-
-# Vite
-dist/
