@@ -1,18 +1,47 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker
+import os
+from pathlib import Path
 
-DATABASE_URL = "sqlite:///./atrium.db"
+from sqlalchemy import create_engine
+from sqlalchemy.orm import (
+    declarative_base,
+    sessionmaker,
+)
+
+
+BACKEND_DIR = (
+    Path(__file__)
+    .resolve()
+    .parent
+    .parent
+)
+
+DEFAULT_DATABASE_PATH = (
+    BACKEND_DIR / "atrium.db"
+)
+
+DATABASE_PATH = os.getenv(
+    "DATABASE_PATH",
+    str(DEFAULT_DATABASE_PATH),
+)
+
+SQLALCHEMY_DATABASE_URL = (
+    f"sqlite:///{DATABASE_PATH}"
+)
+
 
 engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={
+        "check_same_thread": False,
+    },
 )
+
 
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
-    bind=engine
+    bind=engine,
 )
+
 
 Base = declarative_base()

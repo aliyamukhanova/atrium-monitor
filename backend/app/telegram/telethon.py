@@ -1,60 +1,104 @@
 import os
 from datetime import datetime
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from telethon import TelegramClient, events
+from telethon.sessions import StringSession
 
 from app.database import SessionLocal, engine
 from app.models import Reading
 
 
+# Loads local .env variables during development.
+# On Railway, variables are provided through
+# the service's Variables settings.
 load_dotenv()
 
 
-api_id_value = os.getenv("API_ID")
-api_hash = os.getenv("API_HASH")
-channel = os.getenv("CHANNEL_NAME")
+def require_environment_variable(
+    name: str,
+) -> str:
+    value = os.getenv(name)
 
-if not api_id_value:
-    raise RuntimeError(
-        "API_ID is missing from the .env file."
+    if value is None or not value.strip():
+        raise RuntimeError(
+            f"{name} is missing. "
+            "Add it to your local .env file "
+            "or Railway service variables."
+        )
+
+    return value.strip()
+
+
+API_ID = int(
+    require_environment_variable(
+        "API_ID",
     )
+)
 
-if not api_hash:
-    raise RuntimeError(
-        "API_HASH is missing from the .env file."
+API_HASH = require_environment_variable(
+    "API_HASH",
+)
+
+CHANNEL = require_environment_variable(
+    "CHANNEL_NAME",
+)
+
+TELEGRAM_SESSION = (
+    require_environment_variable(
+        "TELEGRAM_SESSION",
     )
+)
 
-if not channel:
-    raise RuntimeError(
-        "CHANNEL_NAME is missing from the .env file."
-    )
-
-
-API_ID = int(api_id_value)
-API_HASH = api_hash
-CHANNEL = channel
-
-LOCAL_TIMEZONE = ZoneInfo(
+LOCAL_TIMEZONE_NAME = os.getenv(
+    "LOCAL_TIMEZONE",
     "Asia/Almaty",
 )
 
-
-client = TelegramClient(
-    "atrium_session",
-    API_ID,
-    API_HASH,
+LOCAL_TIMEZONE = ZoneInfo(
+    LOCAL_TIMEZONE_NAME,
 )
 
 
-def normalize_location(
+# StringSession avoids relying on a local
+# atrium_session.session file, which is better
+# suited to a hosted Railway environment.
+client = TelegramClient(
+    StringSession(
+        TELEGRAM_SESSION,
+    ),
+    API_ID,
+    API_HASH,
+    auto_reconnect=True,
+    connection_retries=10,
+    retry_delay=5,
+)
+
+
+def normalize_text(
     value: str | None,
 ) -> str | None:
     if value is None:
         return None
 
-    normalized = value.strip().lower()
+    normalized = " ".join(
+        value.strip().lower().split()
+    )
+
+    return normalized or None
+
+
+def normalize_location(
+    value: str | None,
+) -> str | None:
+    normalized = normalize_text(
+        value,
+    )
+
+    if normalized is None:
+        return None
 
     if "atrium" in normalized:
         return "atrium"
@@ -68,10 +112,12 @@ def normalize_location(
 def normalize_brightness(
     value: str | None,
 ) -> str | None:
-    if value is None:
-        return None
+    normalized = normalize_text(
+        value,
+    )
 
-    normalized = value.strip().lower()
+    if normalized is None:
+        return None
 
     if "very bright" in normalized:
         return "very bright"
@@ -94,10 +140,12 @@ def normalize_brightness(
 def normalize_noise(
     value: str | None,
 ) -> str | None:
-    if value is None:
-        return None
+    normalized = normalize_text(
+        value,
+    )
 
-    normalized = value.strip().lower()
+    if normalized is None:
+        return None
 
     if "very noisy" in normalized:
         return "very noisy"
@@ -124,6 +172,7 @@ def parse_temperature(
         line.replace("🌡", "")
         .replace("ºC", "")
         .replace("°C", "")
+        .replace(",", ".")
         .strip()
     )
 
@@ -136,10 +185,10 @@ def parse_temperature(
 def parse_message(
     text: str,
 ) -> dict[str, str | float | None] | None:
-    location = None
-    temperature = None
-    brightness = None
-    noise = None
+    location: str | None = None
+    temperature: float | None = None
+    brightness: str | None = None
+    noise: str | None = None
 
     for raw_line in text.splitlines():
         line = raw_line.strip()
@@ -197,17 +246,27 @@ def parse_message(
 
 
 def get_local_message_time(
-    event,
+    event: Any,
 ) -> datetime:
-    if event.message.date is None:
+    telegram_time = (
+        event.message.date
+        if event.message
+        else None
+    )
+
+    if telegram_time is None:
         return datetime.now(
             LOCAL_TIMEZONE,
         ).replace(
             tzinfo=None,
         )
 
+    # Telegram provides a timezone-aware
+    # timestamp. Convert it to Kazakhstan time
+    # before removing timezone information for
+    # storage in the current SQLite schema.
     return (
-        event.message.date
+        telegram_time
         .astimezone(
             LOCAL_TIMEZONE,
         )
@@ -223,31 +282,64 @@ def get_local_message_time(
     )
 )
 async def new_message(
-    event,
-):
-    text = event.raw_text
+    event: Any,
+) -> None:
+    text = event.raw_text or ""
 
-    print("\nNEW MESSAGE")
-    print(text)
+    print(
+        "\nNEW MESSAGE",
+        flush=True,
+    )
 
-    data = parse_message(text)
+    print(
+        text,
+        flush=True,
+    )
+
+    data = parse_message(
+        text,
+    )
 
     if data is None:
         print(
             "Message ignored: "
-            "location was not found."
+            "location was not found.",
+            flush=True,
         )
         return
 
-    if data["temperature"] is None:
+    temperature = data[
+        "temperature"
+    ]
+
+    if not isinstance(
+        temperature,
+        (int, float),
+    ):
         print(
             "Message ignored: "
-            "temperature was not found."
+            "temperature was not found "
+            "or was invalid.",
+            flush=True,
         )
         return
 
-    measured_at = get_local_message_time(
-        event,
+    location = data["location"]
+    brightness = data["brightness"]
+    noise = data["noise"]
+
+    if not isinstance(location, str):
+        print(
+            "Message ignored: "
+            "location was invalid.",
+            flush=True,
+        )
+        return
+
+    measured_at = (
+        get_local_message_time(
+            event,
+        )
     )
 
     db = SessionLocal()
@@ -255,14 +347,26 @@ async def new_message(
     try:
         reading = Reading(
             measured_at=measured_at,
-            location=data["location"],
-            temperature=data[
-                "temperature"
-            ],
-            brightness=data[
-                "brightness"
-            ],
-            noise=data["noise"],
+            location=location,
+            temperature=float(
+                temperature,
+            ),
+            brightness=(
+                brightness
+                if isinstance(
+                    brightness,
+                    str,
+                )
+                else None
+            ),
+            noise=(
+                noise
+                if isinstance(
+                    noise,
+                    str,
+                )
+                else None
+            ),
         )
 
         db.add(reading)
@@ -290,6 +394,7 @@ async def new_message(
                 "measured_at":
                     reading.measured_at,
             },
+            flush=True,
         )
 
     except Exception as error:
@@ -297,29 +402,52 @@ async def new_message(
 
         print(
             "Could not save reading:",
-            error,
+            repr(error),
+            flush=True,
         )
 
     finally:
         db.close()
 
 
-print(
-    "Telethon database:",
-    engine.url,
-)
+def run_listener() -> None:
+    print(
+        "Telethon database:",
+        engine.url,
+        flush=True,
+    )
 
-print(
-    "Local timezone:",
-    LOCAL_TIMEZONE,
-)
+    print(
+        "Local timezone:",
+        LOCAL_TIMEZONE_NAME,
+        flush=True,
+    )
 
-print(
-    "Connecting to Telegram...",
-)
+    print(
+        "Telegram channel:",
+        CHANNEL,
+        flush=True,
+    )
 
-client.start()
+    print(
+        "Connecting to Telegram...",
+        flush=True,
+    )
 
-print("Connected!")
+    client.start()
 
-client.run_until_disconnected()
+    print(
+        "Connected to Telegram.",
+        flush=True,
+    )
+
+    print(
+        "Listening for new messages...",
+        flush=True,
+    )
+
+    client.run_until_disconnected()
+
+
+if __name__ == "__main__":
+    run_listener()
