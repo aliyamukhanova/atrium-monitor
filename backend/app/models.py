@@ -3,8 +3,8 @@ from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import Float
 from sqlalchemy import DateTime
-
 from .database import Base
+from datetime import datetime
 
 
 class Reading(Base):
@@ -26,13 +26,30 @@ class Reading(Base):
 class Report(Base):
     __tablename__ = "reports"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
 
-    created_at = Column(DateTime)
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
 
-    category = Column(String)
+    category = Column(
+        String,
+        nullable=False,
+    )
 
-    comment = Column(String)
+    comment = Column(
+        String,
+        nullable=True,
+    )
 
-    status = Column(String)
-    
+    status = Column(
+        String,
+        default="open",
+        nullable=False,
+    )

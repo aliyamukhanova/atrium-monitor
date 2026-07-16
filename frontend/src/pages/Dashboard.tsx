@@ -6,12 +6,14 @@ import StatCard from "../components/StatCard";
 
 import {
   getComfortScore,
+  getCurrentState,
   getRecommendations,
   getSummary,
 } from "../services/api";
 
 import type {
   ComfortScore,
+  CurrentState,
   Recommendation,
   Summary,
 } from "../types/api";
@@ -19,15 +21,20 @@ import type {
 import "./Dashboard.css";
 
 export default function Dashboard() {
-  const [summary, setSummary] = useState<Summary | null>(null);
+  const [summary, setSummary] =
+  useState<Summary | null>(null);
 
-  const [comfort, setComfort] =
-    useState<ComfortScore | null>(null);
+const [comfort, setComfort] =
+  useState<ComfortScore | null>(null);
 
-  const [recommendation, setRecommendation] =
-    useState<Recommendation | null>(null);
+const [recommendation, setRecommendation] =
+  useState<Recommendation | null>(null);
 
-  const [error, setError] = useState<string | null>(null);
+const [currentState, setCurrentState] =
+  useState<CurrentState | null>(null);
+
+const [error, setError] =
+  useState<string | null>(null);
 
   useEffect(() => {
     async function loadDashboard() {
@@ -36,15 +43,18 @@ export default function Dashboard() {
           summaryData,
           comfortData,
           recommendationData,
+          currentStateData,
         ] = await Promise.all([
           getSummary(),
           getComfortScore(),
           getRecommendations(),
+          getCurrentState(),
         ]);
 
         setSummary(summaryData);
         setComfort(comfortData);
         setRecommendation(recommendationData);
+        setCurrentState(currentStateData);
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -72,7 +82,7 @@ export default function Dashboard() {
     );
   }
 
-  if (!summary || !comfort || !recommendation) {
+  if (!summary || !comfort || !recommendation || !currentState) {
     return (
       <main className="dashboard-page">
         <section className="message-card">
@@ -102,49 +112,72 @@ export default function Dashboard() {
       </header>
 
       <section className="dashboard-section">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Current conditions</p>
+            <h2>Latest atrium status</h2>
+          </div>
+
+          <p>
+            Last updated:{" "}
+            {new Date(
+              currentState.atrium.measured_at
+            ).toLocaleString()}
+          </p>
+        </div>
+
+        <div className="current-status-card">
+          <div>
+            <p className="card-label">Current assessment</p>
+
+            <h2>{currentState.status}</h2>
+
+            <p className="current-status-description">
+              Based on the latest available atrium sensor reading.
+            </p>
+          </div>
+        </div>
+
+        <div className="stats-grid current-stats-grid">
+          <StatCard
+            title="Atrium temperature"
+            value={currentState.atrium.temperature}
+            unit="°C"
+          />
+
+          <StatCard
+            title="Outside temperature"
+            value={
+              currentState.outside.temperature ?? "No data"
+            }
+            unit={
+              currentState.outside.temperature !== null
+                ? "°C"
+                : undefined
+            }
+          />
+
+          <StatCard
+            title="Brightness"
+            value={
+              currentState.atrium.brightness ?? "Unknown"
+            }
+          />
+
+          <StatCard
+            title="Noise"
+            value={
+              currentState.atrium.noise ?? "Unknown"
+            }
+          />
+        </div>
+      </section>
+
+      <section className="dashboard-section">
         <ComfortCard
           score={comfort.comfort_score}
           status={comfort.status}
         />
-      </section>
-
-      <section className="dashboard-section">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Temperature analytics</p>
-            <h2>Recorded conditions</h2>
-          </div>
-
-          <p>
-            Calculated from {summary.total_readings} sensor
-            readings
-          </p>
-        </div>
-
-        <div className="stats-grid">
-          <StatCard
-            title="Average temperature"
-            value={summary.average_temperature}
-            unit="°C"
-          />
-
-          <StatCard
-            title="Minimum temperature"
-            value={summary.minimum_temperature}
-            unit="°C"
-          />
-
-          <StatCard
-            title="Maximum temperature"
-            value={summary.maximum_temperature}
-            unit="°C"
-          />
-
-          <StatCard
-            title="Total readings"
-            value={summary.total_readings}
-          />
-        </div>
       </section>
 
       <section className="dashboard-section">

@@ -7,8 +7,14 @@ from .database import Base
 import app.models
 
 from app.routes.readings import router as readings_router
+from app.routes.reports import (
+    router as reports_router,
+)
 
 app = FastAPI()
+
+app.include_router(readings_router)
+app.include_router(reports_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,7 +27,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(readings_router)
+
 
 Base.metadata.create_all(bind=engine)
 
