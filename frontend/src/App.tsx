@@ -41,7 +41,7 @@ function App() {
             className="brand-link"
             to="/"
           >
-            Atrium Advisor
+            Atrium Monitor
           </NavLink>
 
           <div className="navigation-links">

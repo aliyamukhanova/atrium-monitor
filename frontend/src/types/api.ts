@@ -11,12 +11,30 @@ export interface Summary {
 export interface ComfortScore {
   comfort_score: number;
   status: string;
+  measured_at: string;
 }
 
 export interface Recommendation {
   best_study_time: string;
   recommended_location: string;
+  comfort_score: number | null;
+  prediction_basis: string;
+  confidence?: "low" | "medium" | "high";
+}
+
+export type CurrentActivity =
+  | "study"
+  | "outside"
+  | "dorm";
+
+export interface CurrentRecommendation {
+  activity: CurrentActivity;
+  title: string;
+  reason: string;
   comfort_score: number;
+  atrium_temperature: number;
+  outside_temperature: number | null;
+  measured_at: string;
 }
 
 export interface CurrentState {
@@ -46,13 +64,20 @@ export interface Reading {
 
 export interface ReadingFilters {
   date?: string;
-  location?: "" | "atrium" | "outside";
+  location?:
+    | ""
+    | "atrium"
+    | "outside";
   noise?: string;
   brightness?: string;
   minTemperature?: string;
   maxTemperature?: string;
-  sortBy?: "time" | "temperature";
-  sortOrder?: "asc" | "desc";
+  sortBy?:
+    | "time"
+    | "temperature";
+  sortOrder?:
+    | "asc"
+    | "desc";
 }
 
 export type ReportCategory =
@@ -90,7 +115,9 @@ export interface ChartReading {
   id: number;
   time: string;
   hour: number;
-  location: "atrium" | "outside";
+  location:
+    | "atrium"
+    | "outside";
   temperature: number;
   brightness: string | null;
   noise: string | null;

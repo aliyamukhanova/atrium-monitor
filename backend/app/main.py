@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,6 +10,13 @@ import app.models
 from app.routes.readings import router as readings_router
 from app.routes.reports import (
     router as reports_router,
+)
+
+from app.database import engine
+
+print(
+    "FastAPI database:",
+    engine.url,
 )
 
 app = FastAPI()

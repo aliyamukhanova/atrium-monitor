@@ -10,7 +10,6 @@
 
 .analytics-header h1 {
   margin: 6px 0 12px;
-
   font-size: clamp(2.2rem, 5vw, 4rem);
   letter-spacing: -0.05em;
 }
@@ -18,17 +17,18 @@
 .analytics-header > p:last-child {
   max-width: 650px;
   margin: 0;
-
   color: #687080;
   line-height: 1.7;
 }
 
+/* Date controls */
 .analytics-controls {
   display: flex;
-
   align-items: flex-end;
+  justify-content: center;
+  flex-wrap: wrap;
 
-  gap: 14px;
+  gap: 18px;
   margin-bottom: 28px;
   padding: 22px;
 
@@ -43,9 +43,55 @@
 }
 
 .analytics-controls .filter-field {
-  width: min(300px, 100%);
+  width: min(320px, 100%);
 }
 
+.analytics-controls > .primary-button {
+  min-height: 48px;
+  white-space: nowrap;
+}
+
+.analytics-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Previous / date / next controls */
+.day-switcher {
+  display: grid;
+  grid-template-columns:
+    auto minmax(240px, 340px) auto;
+
+  align-items: end;
+  justify-content: center;
+
+  gap: 16px;
+}
+
+.day-switcher .filter-field {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.day-switcher .filter-field label {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.day-switcher .filter-field input {
+  width: 100%;
+}
+
+.day-switcher button {
+  min-height: 48px;
+  white-space: nowrap;
+}
+
+/* Main analytics content */
 .analytics-section {
   margin-top: 26px;
 }
@@ -76,7 +122,6 @@
 
 .insight-card h2 {
   overflow-wrap: anywhere;
-
   margin: 8px 0;
 
   color: #352d73;
@@ -88,13 +133,81 @@
   color: #5d568b;
 }
 
+/* Chart containers */
+.chart-card {
+  padding: 20px;
+
+  border: 1px solid #e0e5ee;
+  border-radius: 22px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 14px 45px
+    rgba(32, 45, 75, 0.06);
+}
+
+.temperature-chart,
+.environment-chart {
+  width: 100%;
+  height: 340px;
+}
+
+.chart-empty-state {
+  display: grid;
+  min-height: 220px;
+
+  place-items: center;
+
+  color: #687080;
+  text-align: center;
+}
+
+.environment-scale-legend {
+  display: grid;
+
+  gap: 6px;
+  margin-top: 12px;
+  padding: 14px 16px;
+
+  border: 1px solid #e0e5ee;
+  border-radius: 14px;
+
+  background: #ffffff;
+  color: #687080;
+
+  font-size: 0.88rem;
+}
+
+.environment-scale-legend p {
+  margin: 0;
+}
+
+/* Tablet layout */
 @media (max-width: 900px) {
   .analytics-section .stats-grid {
     grid-template-columns:
       repeat(2, minmax(0, 1fr));
   }
+
+  .analytics-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .day-switcher {
+    width: 100%;
+    grid-template-columns:
+      1fr minmax(210px, 1.4fr) 1fr;
+  }
+
+  .analytics-controls > .primary-button {
+    align-self: center;
+    width: min(260px, 100%);
+  }
 }
 
+/* Phone layout */
 @media (max-width: 720px) {
   .analytics-page {
     width: min(100% - 24px, 1180px);
@@ -121,24 +234,29 @@
     align-items: stretch;
     flex-direction: column;
 
-    gap: 12px;
+    gap: 14px;
+    margin: 24px 0;
     padding: 16px;
 
     border-radius: 17px;
   }
 
-  .analytics-controls .filter-field,
-  .analytics-controls .primary-button {
+  .day-switcher {
+    width: 100%;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .day-switcher button,
+  .day-switcher .filter-field,
+  .analytics-controls > .primary-button {
     width: 100%;
   }
 
-  .analytics-controls input {
+  .analytics-controls input,
+  .analytics-controls button {
     min-height: 48px;
     font-size: 16px;
-  }
-
-  .analytics-controls .primary-button {
-    min-height: 48px;
   }
 
   .analytics-section .stats-grid {
@@ -151,7 +269,6 @@
   .analytics-section .stat-card {
     min-height: 112px;
     padding: 17px;
-
     border-radius: 17px;
   }
 
@@ -190,8 +307,24 @@
   .insight-card h2 {
     font-size: 1.7rem;
   }
+
+  .chart-card {
+    padding: 12px;
+    border-radius: 17px;
+  }
+
+  .temperature-chart,
+  .environment-chart {
+    height: 280px;
+  }
+
+  .environment-scale-legend {
+    padding: 12px;
+    font-size: 0.82rem;
+  }
 }
 
+/* Very small phones */
 @media (max-width: 390px) {
   .analytics-section .stats-grid {
     grid-template-columns: 1fr;
@@ -199,39 +332,5 @@
 
   .analytics-section .stat-card:first-child {
     grid-column: auto;
-  }
-}
-
-.chart-card {
-  padding: 20px;
-  border: 1px solid #e0e5ee;
-  border-radius: 22px;
-  background: #ffffff;
-  box-shadow:
-    0 14px 45px
-    rgba(32, 45, 75, 0.06);
-}
-
-.temperature-chart {
-  width: 100%;
-  height: 340px;
-}
-
-.chart-empty-state {
-  display: grid;
-  min-height: 220px;
-  place-items: center;
-  color: #687080;
-  text-align: center;
-}
-
-@media (max-width: 720px) {
-  .chart-card {
-    padding: 12px;
-    border-radius: 17px;
-  }
-
-  .temperature-chart {
-    height: 280px;
   }
 }

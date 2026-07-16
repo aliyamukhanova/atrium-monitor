@@ -1,6 +1,7 @@
 import type {
   ChartReading,
   ComfortScore,
+  CurrentRecommendation,
   CurrentState,
   Reading,
   ReadingFilters,
@@ -11,30 +12,37 @@ import type {
   Summary,
 } from "../types/api";
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL =
+  "http://127.0.0.1:8000";
 
 async function fetchJson<T>(
   url: string,
   options?: RequestInit,
 ): Promise<T> {
-  const response = await fetch(url, options);
+  const response = await fetch(
+    url,
+    options,
+  );
 
   if (!response.ok) {
     let message =
       `Request failed: ${response.status} ${response.statusText}`;
 
     try {
-      const errorBody = await response.json();
+      const errorBody:
+        unknown = await response.json();
 
       if (
         typeof errorBody === "object" &&
         errorBody !== null &&
         "detail" in errorBody
       ) {
-        message = String(errorBody.detail);
+        message = String(
+          errorBody.detail,
+        );
       }
     } catch {
-      // Keep the default HTTP error message.
+      // Keep default HTTP error.
     }
 
     throw new Error(message);
@@ -45,14 +53,29 @@ async function fetchJson<T>(
 
 export function getSummary(
   selectedDate?: string,
+  location?:
+    | "atrium"
+    | "outside",
 ): Promise<Summary> {
-  const parameters = new URLSearchParams();
+  const parameters =
+    new URLSearchParams();
 
   if (selectedDate) {
-    parameters.set("date", selectedDate);
+    parameters.set(
+      "date",
+      selectedDate,
+    );
   }
 
-  const queryString = parameters.toString();
+  if (location) {
+    parameters.set(
+      "location",
+      location,
+    );
+  }
+
+  const queryString =
+    parameters.toString();
 
   const url = queryString
     ? `${API_URL}/summary?${queryString}`
@@ -61,19 +84,29 @@ export function getSummary(
   return fetchJson<Summary>(url);
 }
 
-export function getComfortScore(): Promise<ComfortScore> {
+export function getComfortScore():
+Promise<ComfortScore> {
   return fetchJson<ComfortScore>(
     `${API_URL}/comfort-score`,
   );
 }
 
-export function getRecommendations(): Promise<Recommendation> {
+export function getRecommendations():
+Promise<Recommendation> {
   return fetchJson<Recommendation>(
     `${API_URL}/recommendations`,
   );
 }
 
-export function getCurrentState(): Promise<CurrentState> {
+export function getCurrentRecommendation():
+Promise<CurrentRecommendation> {
+  return fetchJson<CurrentRecommendation>(
+    `${API_URL}/current-recommendation`,
+  );
+}
+
+export function getCurrentState():
+Promise<CurrentState> {
   return fetchJson<CurrentState>(
     `${API_URL}/current`,
   );
@@ -82,10 +115,14 @@ export function getCurrentState(): Promise<CurrentState> {
 export function getReadings(
   filters: ReadingFilters = {},
 ): Promise<Reading[]> {
-  const parameters = new URLSearchParams();
+  const parameters =
+    new URLSearchParams();
 
   if (filters.date) {
-    parameters.set("date", filters.date);
+    parameters.set(
+      "date",
+      filters.date,
+    );
   }
 
   if (filters.location) {
@@ -96,7 +133,10 @@ export function getReadings(
   }
 
   if (filters.noise) {
-    parameters.set("noise", filters.noise);
+    parameters.set(
+      "noise",
+      filters.noise,
+    );
   }
 
   if (filters.brightness) {
@@ -130,7 +170,8 @@ export function getReadings(
     filters.sortOrder ?? "desc",
   );
 
-  const queryString = parameters.toString();
+  const queryString =
+    parameters.toString();
 
   const url = queryString
     ? `${API_URL}/readings?${queryString}`
@@ -142,22 +183,30 @@ export function getReadings(
 export function getChartData(
   selectedDate?: string,
 ): Promise<ChartReading[]> {
-  const parameters = new URLSearchParams();
+  const parameters =
+    new URLSearchParams();
 
   if (selectedDate) {
-    parameters.set("date", selectedDate);
+    parameters.set(
+      "date",
+      selectedDate,
+    );
   }
 
-  const queryString = parameters.toString();
+  const queryString =
+    parameters.toString();
 
   const url = queryString
     ? `${API_URL}/chart-data?${queryString}`
     : `${API_URL}/chart-data`;
 
-  return fetchJson<ChartReading[]>(url);
+  return fetchJson<ChartReading[]>(
+    url,
+  );
 }
 
-export function getReports(): Promise<Report[]> {
+export function getReports():
+Promise<Report[]> {
   return fetchJson<Report[]>(
     `${API_URL}/reports`,
   );
@@ -171,9 +220,12 @@ export function createReport(
     {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type":
+          "application/json",
       },
-      body: JSON.stringify(report),
+      body: JSON.stringify(
+        report,
+      ),
     },
   );
 }
@@ -187,9 +239,12 @@ export function updateReport(
     {
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type":
+          "application/json",
       },
-      body: JSON.stringify(update),
+      body: JSON.stringify(
+        update,
+      ),
     },
   );
 }

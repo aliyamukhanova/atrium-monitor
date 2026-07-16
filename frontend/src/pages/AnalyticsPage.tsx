@@ -4,6 +4,7 @@ import {
   useState,
 } from "react";
 
+import EnvironmentChart from "../components/EnvironmentChart";
 import StatCard from "../components/StatCard";
 import TemperatureChart from "../components/TemperatureChart";
 
@@ -23,6 +24,12 @@ interface TemperaturePoint {
   time: string;
   atriumTemperature: number | null;
   outsideTemperature: number | null;
+}
+
+interface EnvironmentPoint {
+  time: string;
+  noiseLevel: number | null;
+  brightnessLevel: number | null;
 }
 
 function calculateAverage(
@@ -90,13 +97,123 @@ function buildTemperatureChartData(
     )
     .map((item) => ({
       time: item.time,
+
       atriumTemperature:
         calculateAverage(
           item.atriumValues,
         ),
+
       outsideTemperature:
         calculateAverage(
           item.outsideValues,
+        ),
+    }));
+}
+
+function noiseToNumber(
+  noise: string | null,
+): number | null {
+  const values: Record<string, number> = {
+    quiet: 1,
+    mild: 2,
+    noisy: 3,
+    "very noisy": 4,
+  };
+
+  return noise
+    ? values[noise] ?? null
+    : null;
+}
+
+function brightnessToNumber(
+  brightness: string | null,
+): number | null {
+  const values: Record<string, number> = {
+    dark: 1,
+    dim: 2,
+    normal: 3,
+    bright: 4,
+    "very bright": 5,
+  };
+
+  return brightness
+    ? values[brightness] ?? null
+    : null;
+}
+
+function buildEnvironmentChartData(
+  readings: ChartReading[],
+): EnvironmentPoint[] {
+  const hourlyData = new Map<
+    number,
+    {
+      time: string;
+      noiseValues: number[];
+      brightnessValues: number[];
+    }
+  >();
+
+  for (const reading of readings) {
+    // Outside readings do not contain
+    // brightness and noise data.
+    if (reading.location !== "atrium") {
+      continue;
+    }
+
+    const existing =
+      hourlyData.get(reading.hour) ?? {
+        time: `${reading.hour
+          .toString()
+          .padStart(2, "0")}:00`,
+        noiseValues: [],
+        brightnessValues: [],
+      };
+
+    const noiseValue =
+      noiseToNumber(reading.noise);
+
+    const brightnessValue =
+      brightnessToNumber(
+        reading.brightness,
+      );
+
+    if (noiseValue !== null) {
+      existing.noiseValues.push(
+        noiseValue,
+      );
+    }
+
+    if (brightnessValue !== null) {
+      existing.brightnessValues.push(
+        brightnessValue,
+      );
+    }
+
+    hourlyData.set(
+      reading.hour,
+      existing,
+    );
+  }
+
+  return Array.from(
+    hourlyData.values(),
+  )
+    .sort((first, second) =>
+      first.time.localeCompare(
+        second.time,
+      ),
+    )
+    .map((item) => ({
+      time: item.time,
+
+      noiseLevel:
+        calculateAverage(
+          item.noiseValues,
+        ),
+
+      brightnessLevel:
+        calculateAverage(
+          item.brightnessValues,
         ),
     }));
 }
@@ -110,6 +227,11 @@ export default function AnalyticsPage() {
 
   const [chartData, setChartData] =
     useState<TemperaturePoint[]>([]);
+
+  const [
+    environmentChartData,
+    setEnvironmentChartData,
+  ] = useState<EnvironmentPoint[]>([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -137,9 +259,19 @@ export default function AnalyticsPage() {
           readings,
         );
 
+      const formattedEnvironmentData =
+        buildEnvironmentChartData(
+          readings,
+        );
+
       setSummary(summaryData);
+
       setChartData(
         formattedChartData,
+      );
+
+      setEnvironmentChartData(
+        formattedEnvironmentData,
       );
     } catch (err) {
       if (err instanceof Error) {
@@ -165,6 +297,40 @@ export default function AnalyticsPage() {
     loadAnalytics(selectedDate);
   }
 
+  function changeDate(days: number) {
+    /*
+     * Adding T12:00:00 avoids some timezone
+     * problems that can occur when JavaScript
+     * interprets a date at midnight.
+     */
+    const currentDate = new Date(
+      `${selectedDate}T12:00:00`,
+    );
+
+    currentDate.setDate(
+      currentDate.getDate() + days,
+    );
+
+    const year =
+      currentDate.getFullYear();
+
+    const month = String(
+      currentDate.getMonth() + 1,
+    ).padStart(2, "0");
+
+    const day = String(
+      currentDate.getDate(),
+    ).padStart(2, "0");
+
+    const newDate =
+      `${year}-${month}-${day}`;
+
+    setSelectedDate(newDate);
+
+    // Load the new day immediately.
+    loadAnalytics(newDate);
+  }
+
   return (
     <main className="analytics-page">
       <header className="analytics-header">
@@ -180,7 +346,7 @@ export default function AnalyticsPage() {
           Select a day to explore
           temperature statistics,
           important time periods,
-          and trends.
+          and environmental trends.
         </p>
       </header>
 
@@ -188,28 +354,55 @@ export default function AnalyticsPage() {
         className="analytics-controls"
         onSubmit={handleSubmit}
       >
-        <div className="filter-field">
-          <label htmlFor="analytics-date">
-            Select date
-          </label>
-
-          <input
-            id="analytics-date"
-            type="date"
-            value={selectedDate}
-            onChange={(event) =>
-              setSelectedDate(
-                event.target.value,
-              )
+        <div className="day-switcher">
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() =>
+              changeDate(-1)
             }
-          />
+            disabled={loading}
+          >
+            ← Previous day
+          </button>
+
+          <div className="filter-field">
+            <label htmlFor="analytics-date">
+              Select date
+            </label>
+
+            <input
+              id="analytics-date"
+              type="date"
+              value={selectedDate}
+              onChange={(event) =>
+                setSelectedDate(
+                  event.target.value,
+                )
+              }
+            />
+          </div>
+
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() =>
+              changeDate(1)
+            }
+            disabled={loading}
+          >
+            Next day →
+          </button>
         </div>
 
         <button
           className="primary-button"
           type="submit"
+          disabled={loading}
         >
-          Show analytics
+          {loading
+            ? "Loading..."
+            : "Show analytics"}
         </button>
       </form>
 
@@ -250,8 +443,9 @@ export default function AnalyticsPage() {
             </h2>
 
             <p>
-              Choose another date to
-              view analytics.
+              Use Previous day, Next day,
+              or the date picker to choose
+              another date.
             </p>
           </section>
         )}
@@ -377,11 +571,63 @@ export default function AnalyticsPage() {
                   />
                 ) : (
                   <div className="chart-empty-state">
-                    No chart data is
-                    available for this day.
+                    No temperature chart
+                    data is available for
+                    this day.
                   </div>
                 )}
               </article>
+            </section>
+
+            <section className="analytics-section">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">
+                    Atrium environment
+                  </p>
+
+                  <h2>
+                    Noise and brightness
+                    by hour
+                  </h2>
+                </div>
+              </div>
+
+              <article className="chart-card">
+                {environmentChartData.length >
+                0 ? (
+                  <EnvironmentChart
+                    data={
+                      environmentChartData
+                    }
+                  />
+                ) : (
+                  <div className="chart-empty-state">
+                    No noise or brightness
+                    data is available for
+                    this day.
+                  </div>
+                )}
+              </article>
+
+              <div className="environment-scale-legend">
+                <p>
+                  <strong>Noise:</strong>
+                  {" "}
+                  1 Quiet, 2 Mild,
+                  3 Noisy, 4 Very noisy
+                </p>
+
+                <p>
+                  <strong>
+                    Brightness:
+                  </strong>
+                  {" "}
+                  1 Dark, 2 Dim,
+                  3 Normal, 4 Bright,
+                  5 Very bright
+                </p>
+              </div>
             </section>
           </>
         )}

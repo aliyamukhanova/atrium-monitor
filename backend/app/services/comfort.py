@@ -1,60 +1,93 @@
-def calculate_temperature_score(temp):
-
-    if 24 <= temp <= 28:
+def calculate_temperature_score(
+    temperature: float,
+) -> int:
+    if 24 <= temperature <= 28:
         return 100
 
-    elif 22 <= temp <= 30:
+    if 22 <= temperature <= 30:
         return 80
 
-    elif 20 <= temp <= 32:
+    if 20 <= temperature <= 32:
         return 60
 
-    else:
-        return 40
-    
-def calculate_noise_score(noise):
+    return 40
 
+
+def calculate_noise_score(
+    noise: str,
+) -> int:
     scores = {
         "quiet": 100,
         "mild": 70,
-        "loud": 40
+        "noisy": 40,
+        "very noisy": 20,
+
+        # Keep support for older imported data.
+        "loud": 40,
     }
 
     return scores.get(noise, 50)
 
-def calculate_brightness_score(brightness):
 
+def calculate_brightness_score(
+    brightness: str,
+) -> int:
     scores = {
         "normal": 100,
         "bright": 80,
-        "dark": 60
+        "very bright": 60,
+        "dim": 70,
+        "dark": 50,
     }
 
-    return scores.get(brightness, 50)
+    return scores.get(
+        brightness,
+        50,
+    )
+
 
 def calculate_comfort_score(
-    temperature,
-    brightness,
-    noise
-):
-
-    temp_score = calculate_temperature_score(
-        temperature
+    temperature: float,
+    brightness: str,
+    noise: str,
+) -> int:
+    temperature_score = (
+        calculate_temperature_score(
+            temperature,
+        )
     )
 
-    brightness_score = calculate_brightness_score(
-        brightness
+    brightness_score = (
+        calculate_brightness_score(
+            brightness,
+        )
     )
 
-    noise_score = calculate_noise_score(
-        noise
+    noise_score = (
+        calculate_noise_score(
+            noise,
+        )
     )
 
     score = (
-        temp_score * 0.5 +
-        brightness_score * 0.25 +
-        noise_score * 0.25
+        temperature_score * 0.5
+        + brightness_score * 0.25
+        + noise_score * 0.25
     )
 
     return round(score)
 
+
+def get_comfort_status(
+    score: int,
+) -> str:
+    if score >= 90:
+        return "Excellent"
+
+    if score >= 70:
+        return "Good"
+
+    if score >= 40:
+        return "Fair"
+
+    return "Poor"

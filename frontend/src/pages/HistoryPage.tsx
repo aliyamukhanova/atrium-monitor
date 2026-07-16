@@ -24,10 +24,21 @@ const initialFilters: ReadingFilters = {
   sortOrder: "desc",
 };
 
+function normalizeLocation(
+  location: string,
+): "atrium" | "outside" {
+  return location
+    .trim()
+    .toLowerCase() === "atrium"
+    ? "atrium"
+    : "outside";
+}
+
 function formatLocation(
-  location: Reading["location"],
+  location: string,
 ): string {
-  return location === "atrium"
+  return normalizeLocation(location) ===
+    "atrium"
     ? "Atrium"
     : "Outside";
 }
@@ -113,11 +124,14 @@ export default function HistoryPage() {
             Sensor history
           </p>
 
-          <h1>Measurement History</h1>
+          <h1>
+            Measurement History
+          </h1>
 
           <p>
             Explore past atrium and outdoor
-            conditions using filters and sorting.
+            conditions using filters and
+            sorting.
           </p>
         </div>
       </header>
@@ -430,108 +444,143 @@ export default function HistoryPage() {
                 <table className="readings-table">
                   <thead>
                     <tr>
-                      <th>Date and time</th>
-                      <th>Location</th>
-                      <th>Temperature</th>
-                      <th>Brightness</th>
-                      <th>Noise</th>
+                      <th>
+                        Date and time
+                      </th>
+
+                      <th>
+                        Location
+                      </th>
+
+                      <th>
+                        Temperature
+                      </th>
+
+                      <th>
+                        Brightness
+                      </th>
+
+                      <th>
+                        Noise
+                      </th>
                     </tr>
                   </thead>
 
                   <tbody>
                     {readings.map(
-                      (reading) => (
-                        <tr key={reading.id}>
-                          <td>
-                            {new Date(
-                              reading.measured_at,
-                            ).toLocaleString()}
-                          </td>
+                      (reading) => {
+                        const normalizedLocation =
+                          normalizeLocation(
+                            reading.location,
+                          );
 
-                          <td>
-                            <span
-                              className={`location-badge location-${reading.location}`}
-                            >
-                              {formatLocation(
-                                reading.location,
+                        return (
+                          <tr key={reading.id}>
+                            <td>
+                              {new Date(
+                                reading.measured_at,
+                              ).toLocaleString()}
+                            </td>
+
+                            <td>
+                              <span
+                                className={`location-badge location-${normalizedLocation}`}
+                              >
+                                {formatLocation(
+                                  reading.location,
+                                )}
+                              </span>
+                            </td>
+
+                            <td>
+                              <strong>
+                                {
+                                  reading.temperature
+                                }
+                                °C
+                              </strong>
+                            </td>
+
+                            <td>
+                              {formatCategory(
+                                reading.brightness,
                               )}
-                            </span>
-                          </td>
+                            </td>
 
-                          <td>
-                            <strong>
-                              {reading.temperature}
-                              °C
-                            </strong>
-                          </td>
-
-                          <td>
-                            {formatCategory(
-                              reading.brightness,
-                            )}
-                          </td>
-
-                          <td>
-                            {formatCategory(
-                              reading.noise,
-                            )}
-                          </td>
-                        </tr>
-                      ),
+                            <td>
+                              {formatCategory(
+                                reading.noise,
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      },
                     )}
                   </tbody>
                 </table>
               </div>
 
               <div className="mobile-readings-list">
-                {readings.map((reading) => (
-                  <article
-                    className="mobile-reading-card"
-                    key={reading.id}
-                  >
-                    <div className="mobile-reading-header">
-                      <span
-                        className={`location-badge location-${reading.location}`}
-                      >
-                        {formatLocation(
-                          reading.location,
-                        )}
-                      </span>
+                {readings.map((reading) => {
+                  const normalizedLocation =
+                    normalizeLocation(
+                      reading.location,
+                    );
 
-                      <strong>
-                        {reading.temperature}°C
-                      </strong>
-                    </div>
-
-                    <time>
-                      {new Date(
-                        reading.measured_at,
-                      ).toLocaleString()}
-                    </time>
-
-                    <dl>
-                      <div>
-                        <dt>Brightness</dt>
-
-                        <dd>
-                          {formatCategory(
-                            reading.brightness,
+                  return (
+                    <article
+                      className="mobile-reading-card"
+                      key={reading.id}
+                    >
+                      <div className="mobile-reading-header">
+                        <span
+                          className={`location-badge location-${normalizedLocation}`}
+                        >
+                          {formatLocation(
+                            reading.location,
                           )}
-                        </dd>
+                        </span>
+
+                        <strong>
+                          {reading.temperature}
+                          °C
+                        </strong>
                       </div>
 
-                      <div>
-                        <dt>Noise</dt>
+                      <time>
+                        {new Date(
+                          reading.measured_at,
+                        ).toLocaleString()}
+                      </time>
 
-                        <dd>
-                          {formatCategory(
-                            reading.noise,
-                          )}
-                        </dd>
-                      </div>
-                    </dl>
-                  </article>
-                ))}
+                      <dl>
+                        <div>
+                          <dt>
+                            Brightness
+                          </dt>
+
+                          <dd>
+                            {formatCategory(
+                              reading.brightness,
+                            )}
+                          </dd>
+                        </div>
+
+                        <div>
+                          <dt>
+                            Noise
+                          </dt>
+
+                          <dd>
+                            {formatCategory(
+                              reading.noise,
+                            )}
+                          </dd>
+                        </div>
+                      </dl>
+                    </article>
+                  );
+                })}
               </div>
             </>
           )}
