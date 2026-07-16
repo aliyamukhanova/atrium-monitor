@@ -357,3 +357,43 @@ def get_current_state():
 
     finally:
         db.close()
+
+@router.get("/chart-data")
+def get_chart_data(
+    selected_date: date | None = Query(
+        default=None,
+        alias="date",
+    ),
+):
+    db: Session = SessionLocal()
+
+    try:
+        query = db.query(Reading)
+
+        if selected_date is not None:
+            query = query.filter(
+                func.date(Reading.measured_at)
+                == selected_date.isoformat()
+            )
+
+        readings = (
+            query
+            .order_by(Reading.measured_at.asc())
+            .all()
+        )
+
+        return [
+            {
+                "id": reading.id,
+                "time": reading.measured_at,
+                "hour": reading.measured_at.hour,
+                "location": reading.location,
+                "temperature": reading.temperature,
+                "brightness": reading.brightness,
+                "noise": reading.noise,
+            }
+            for reading in readings
+        ]
+
+    finally:
+        db.close()

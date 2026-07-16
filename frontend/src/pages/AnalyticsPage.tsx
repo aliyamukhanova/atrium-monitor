@@ -5,11 +5,101 @@ import {
 } from "react";
 
 import StatCard from "../components/StatCard";
-import { getSummary } from "../services/api";
+import TemperatureChart from "../components/TemperatureChart";
 
-import type { Summary } from "../types/api";
+import {
+  getChartData,
+  getSummary,
+} from "../services/api";
+
+import type {
+  ChartReading,
+  Summary,
+} from "../types/api";
 
 import "./AnalyticsPage.css";
+
+interface TemperaturePoint {
+  time: string;
+  atriumTemperature: number | null;
+  outsideTemperature: number | null;
+}
+
+function calculateAverage(
+  values: number[],
+): number | null {
+  if (values.length === 0) {
+    return null;
+  }
+
+  const total = values.reduce(
+    (sum, value) => sum + value,
+    0,
+  );
+
+  return Number(
+    (total / values.length).toFixed(2),
+  );
+}
+
+function buildTemperatureChartData(
+  readings: ChartReading[],
+): TemperaturePoint[] {
+  const hourlyData = new Map<
+    number,
+    {
+      time: string;
+      atriumValues: number[];
+      outsideValues: number[];
+    }
+  >();
+
+  for (const reading of readings) {
+    const existing =
+      hourlyData.get(reading.hour) ?? {
+        time: `${reading.hour
+          .toString()
+          .padStart(2, "0")}:00`,
+        atriumValues: [],
+        outsideValues: [],
+      };
+
+    if (reading.location === "atrium") {
+      existing.atriumValues.push(
+        reading.temperature,
+      );
+    } else {
+      existing.outsideValues.push(
+        reading.temperature,
+      );
+    }
+
+    hourlyData.set(
+      reading.hour,
+      existing,
+    );
+  }
+
+  return Array.from(
+    hourlyData.values(),
+  )
+    .sort((first, second) =>
+      first.time.localeCompare(
+        second.time,
+      ),
+    )
+    .map((item) => ({
+      time: item.time,
+      atriumTemperature:
+        calculateAverage(
+          item.atriumValues,
+        ),
+      outsideTemperature:
+        calculateAverage(
+          item.outsideValues,
+        ),
+    }));
+}
 
 export default function AnalyticsPage() {
   const [selectedDate, setSelectedDate] =
@@ -18,24 +108,46 @@ export default function AnalyticsPage() {
   const [summary, setSummary] =
     useState<Summary | null>(null);
 
+  const [chartData, setChartData] =
+    useState<TemperaturePoint[]>([]);
+
   const [loading, setLoading] =
     useState(true);
 
   const [error, setError] =
     useState<string | null>(null);
 
-  async function loadSummary(date: string) {
+  async function loadAnalytics(
+    date: string,
+  ) {
     setLoading(true);
     setError(null);
 
     try {
-      const data = await getSummary(date);
-      setSummary(data);
+      const [
+        summaryData,
+        readings,
+      ] = await Promise.all([
+        getSummary(date),
+        getChartData(date),
+      ]);
+
+      const formattedChartData =
+        buildTemperatureChartData(
+          readings,
+        );
+
+      setSummary(summaryData);
+      setChartData(
+        formattedChartData,
+      );
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("An unknown error occurred.");
+        setError(
+          "An unknown error occurred.",
+        );
       }
     } finally {
       setLoading(false);
@@ -43,14 +155,14 @@ export default function AnalyticsPage() {
   }
 
   useEffect(() => {
-    loadSummary(selectedDate);
+    loadAnalytics(selectedDate);
   }, []);
 
   function handleSubmit(
     event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
-    loadSummary(selectedDate);
+    loadAnalytics(selectedDate);
   }
 
   return (
@@ -60,11 +172,15 @@ export default function AnalyticsPage() {
           Daily analytics
         </p>
 
-        <h1>Temperature Analysis</h1>
+        <h1>
+          Temperature Analysis
+        </h1>
 
         <p>
-          Select a day to explore temperature
-          statistics and important time periods.
+          Select a day to explore
+          temperature statistics,
+          important time periods,
+          and trends.
         </p>
       </header>
 
@@ -82,7 +198,9 @@ export default function AnalyticsPage() {
             type="date"
             value={selectedDate}
             onChange={(event) =>
-              setSelectedDate(event.target.value)
+              setSelectedDate(
+                event.target.value,
+              )
             }
           />
         </div>
@@ -96,16 +214,29 @@ export default function AnalyticsPage() {
       </form>
 
       {error && (
-        <section className="history-message error-message">
-          <h2>Could not load analytics</h2>
+        <section
+          className="history-message error-message"
+          role="alert"
+        >
+          <h2>
+            Could not load analytics
+          </h2>
+
           <p>{error}</p>
         </section>
       )}
 
       {!error && loading && (
-        <section className="history-message">
+        <section
+          className="history-message"
+          role="status"
+          aria-live="polite"
+        >
           <div className="loading-spinner" />
-          <p>Loading daily analytics...</p>
+
+          <p>
+            Loading daily analytics...
+          </p>
         </section>
       )}
 
@@ -114,11 +245,13 @@ export default function AnalyticsPage() {
         summary &&
         summary.total_readings === 0 && (
           <section className="history-message">
-            <h2>No readings for this day</h2>
+            <h2>
+              No readings for this day
+            </h2>
 
             <p>
-              Choose another date to view
-              analytics.
+              Choose another date to
+              view analytics.
             </p>
           </section>
         )}
@@ -133,7 +266,8 @@ export default function AnalyticsPage() {
                 <StatCard
                   title="Average temperature"
                   value={
-                    summary.average_temperature ??
+                    summary
+                      .average_temperature ??
                     "No data"
                   }
                   unit="°C"
@@ -142,7 +276,8 @@ export default function AnalyticsPage() {
                 <StatCard
                   title="Minimum temperature"
                   value={
-                    summary.minimum_temperature ??
+                    summary
+                      .minimum_temperature ??
                     "No data"
                   }
                   unit="°C"
@@ -151,7 +286,8 @@ export default function AnalyticsPage() {
                 <StatCard
                   title="Maximum temperature"
                   value={
-                    summary.maximum_temperature ??
+                    summary
+                      .maximum_temperature ??
                     "No data"
                   }
                   unit="°C"
@@ -159,7 +295,9 @@ export default function AnalyticsPage() {
 
                 <StatCard
                   title="Total readings"
-                  value={summary.total_readings}
+                  value={
+                    summary.total_readings
+                  }
                 />
               </div>
             </section>
@@ -185,8 +323,9 @@ export default function AnalyticsPage() {
                 </h2>
 
                 <p>
-                  This was the coolest recorded
-                  point of the selected day.
+                  This was the coolest
+                  recorded point of the
+                  selected day.
                 </p>
               </article>
 
@@ -210,9 +349,38 @@ export default function AnalyticsPage() {
                 </h2>
 
                 <p>
-                  This was the hottest recorded
-                  point of the selected day.
+                  This was the hottest
+                  recorded point of the
+                  selected day.
                 </p>
+              </article>
+            </section>
+
+            <section className="analytics-section">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">
+                    Temperature trend
+                  </p>
+
+                  <h2>
+                    Atrium and outside
+                    temperature by hour
+                  </h2>
+                </div>
+              </div>
+
+              <article className="chart-card">
+                {chartData.length > 0 ? (
+                  <TemperatureChart
+                    data={chartData}
+                  />
+                ) : (
+                  <div className="chart-empty-state">
+                    No chart data is
+                    available for this day.
+                  </div>
+                )}
               </article>
             </section>
           </>

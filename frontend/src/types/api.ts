@@ -85,3 +85,13 @@ export interface ReportUpdate {
   comment?: string;
   status?: ReportStatus;
 }
+
+export interface ChartReading {
+  id: number;
+  time: string;
+  hour: number;
+  location: "atrium" | "outside";
+  temperature: number;
+  brightness: string | null;
+  noise: string | null;
+}

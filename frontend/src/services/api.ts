@@ -1,13 +1,14 @@
 import type {
+  ChartReading,
   ComfortScore,
   CurrentState,
   Reading,
   ReadingFilters,
   Recommendation,
-  Summary,
   Report,
   ReportCreate,
   ReportUpdate,
+  Summary,
 } from "../types/api";
 
 const API_URL = "http://127.0.0.1:8000";
@@ -19,9 +20,24 @@ async function fetchJson<T>(
   const response = await fetch(url, options);
 
   if (!response.ok) {
-    throw new Error(
-      `Request failed: ${response.status} ${response.statusText}`,
-    );
+    let message =
+      `Request failed: ${response.status} ${response.statusText}`;
+
+    try {
+      const errorBody = await response.json();
+
+      if (
+        typeof errorBody === "object" &&
+        errorBody !== null &&
+        "detail" in errorBody
+      ) {
+        message = String(errorBody.detail);
+      }
+    } catch {
+      // Keep the default HTTP error message.
+    }
+
+    throw new Error(message);
   }
 
   return response.json() as Promise<T>;
@@ -46,15 +62,21 @@ export function getSummary(
 }
 
 export function getComfortScore(): Promise<ComfortScore> {
-  return fetchJson<ComfortScore>(`${API_URL}/comfort-score`);
+  return fetchJson<ComfortScore>(
+    `${API_URL}/comfort-score`,
+  );
 }
 
 export function getRecommendations(): Promise<Recommendation> {
-  return fetchJson<Recommendation>(`${API_URL}/recommendations`);
+  return fetchJson<Recommendation>(
+    `${API_URL}/recommendations`,
+  );
 }
 
 export function getCurrentState(): Promise<CurrentState> {
-  return fetchJson<CurrentState>(`${API_URL}/current`);
+  return fetchJson<CurrentState>(
+    `${API_URL}/current`,
+  );
 }
 
 export function getReadings(
@@ -67,7 +89,10 @@ export function getReadings(
   }
 
   if (filters.location) {
-    parameters.set("location", filters.location);
+    parameters.set(
+      "location",
+      filters.location,
+    );
   }
 
   if (filters.noise) {
@@ -75,7 +100,10 @@ export function getReadings(
   }
 
   if (filters.brightness) {
-    parameters.set("brightness", filters.brightness);
+    parameters.set(
+      "brightness",
+      filters.brightness,
+    );
   }
 
   if (filters.minTemperature) {
@@ -104,9 +132,29 @@ export function getReadings(
 
   const queryString = parameters.toString();
 
-  return fetchJson<Reading[]>(
-    `${API_URL}/readings?${queryString}`,
-  );
+  const url = queryString
+    ? `${API_URL}/readings?${queryString}`
+    : `${API_URL}/readings`;
+
+  return fetchJson<Reading[]>(url);
+}
+
+export function getChartData(
+  selectedDate?: string,
+): Promise<ChartReading[]> {
+  const parameters = new URLSearchParams();
+
+  if (selectedDate) {
+    parameters.set("date", selectedDate);
+  }
+
+  const queryString = parameters.toString();
+
+  const url = queryString
+    ? `${API_URL}/chart-data?${queryString}`
+    : `${API_URL}/chart-data`;
+
+  return fetchJson<ChartReading[]>(url);
 }
 
 export function getReports(): Promise<Report[]> {

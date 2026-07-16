@@ -10,6 +10,7 @@
 
 .reports-header h1 {
   margin: 6px 0 12px;
+
   font-size: clamp(2.2rem, 5vw, 4rem);
   letter-spacing: -0.05em;
 }
@@ -17,15 +18,19 @@
 .reports-header > p:last-child {
   max-width: 650px;
   margin: 0;
+
   color: #687080;
   line-height: 1.7;
 }
 
 .report-form-card {
   padding: 24px;
+
   border: 1px solid #e0e5ee;
   border-radius: 24px;
+
   background: #ffffff;
+
   box-shadow:
     0 16px 50px
     rgba(32, 45, 75, 0.07);
@@ -40,6 +45,7 @@
   grid-template-columns:
     minmax(180px, 0.7fr)
     minmax(280px, 2fr);
+
   gap: 16px;
   margin-bottom: 16px;
 }
@@ -49,13 +55,21 @@
   resize: vertical;
 }
 
+.report-form-card button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .success-message {
   margin-top: 18px;
   padding: 14px 16px;
+
   border: 1px solid #a6e3bf;
   border-radius: 13px;
+
   background: #effcf4;
   color: #155d33;
+
   font-weight: 700;
 }
 
@@ -67,14 +81,19 @@
   display: grid;
   grid-template-columns:
     repeat(2, minmax(0, 1fr));
+
   gap: 16px;
 }
 
 .report-card {
+  min-width: 0;
   padding: 22px;
+
   border: 1px solid #e0e5ee;
   border-radius: 20px;
+
   background: #ffffff;
+
   box-shadow:
     0 12px 38px
     rgba(32, 45, 75, 0.06);
@@ -82,8 +101,10 @@
 
 .report-card-header {
   display: flex;
+
   align-items: center;
   justify-content: space-between;
+
   gap: 12px;
 }
 
@@ -94,8 +115,10 @@
 
 .report-status {
   display: inline-flex;
+
   padding: 5px 10px;
   border-radius: 999px;
+
   font-size: 0.78rem;
   font-weight: 800;
 }
@@ -116,6 +139,8 @@
 
 .report-card > p {
   min-height: 48px;
+  overflow-wrap: anywhere;
+
   color: #626b7a;
   line-height: 1.55;
 }
@@ -123,17 +148,21 @@
 .report-actions {
   display: flex;
   flex-wrap: wrap;
+
   gap: 8px;
   margin-top: 18px;
 }
 
 .report-actions button {
   padding: 8px 11px;
+
   border: 1px solid #ccd3df;
   border-radius: 9px;
+
   background: #ffffff;
-  cursor: pointer;
+
   font-weight: 700;
+  cursor: pointer;
 }
 
 .report-actions button:hover {
@@ -145,21 +174,128 @@
   color: #9f3030;
 }
 
-@media (max-width: 760px) {
-  .report-form-grid,
+.report-actions .danger-button:hover {
+  background: #fff2f2;
+}
+
+@media (max-width: 850px) {
   .reports-grid {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 720px) {
   .reports-page {
     width: min(100% - 24px, 1180px);
-    padding-top: 30px;
+    padding: 28px 0 32px;
+  }
+
+  .reports-header {
+    margin-bottom: 22px;
+  }
+
+  .reports-header h1 {
+    margin-bottom: 10px;
+
+    font-size: clamp(2.1rem, 10vw, 3.2rem);
+    line-height: 1.05;
+  }
+
+  .reports-header > p:last-child {
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .report-form-card {
+    padding: 17px;
+    border-radius: 17px;
+  }
+
+  .report-form-card h2 {
+    font-size: 1.35rem;
+  }
+
+  .report-form-grid {
+    grid-template-columns: 1fr;
+
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .report-form-card textarea {
+    min-height: 140px;
+    font-size: 16px;
+  }
+
+  .report-form-card select {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .report-form-card .primary-button {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .success-message {
+    border-radius: 12px;
+    font-size: 0.92rem;
+  }
+
+  .reports-list-section {
+    margin-top: 26px;
+  }
+
+  .reports-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .report-card {
+    padding: 18px;
+    border-radius: 17px;
   }
 
   .report-card-header {
     align-items: flex-start;
     flex-direction: column;
+
+    gap: 8px;
+  }
+
+  .report-card h3 {
+    margin-top: 15px;
+    font-size: 1.15rem;
+  }
+
+  .report-card > p {
+    min-height: 0;
+  }
+
+  .report-actions {
+    display: grid;
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 8px;
+  }
+
+  .report-actions button {
+    width: 100%;
+    min-height: 46px;
+  }
+
+  .report-actions .danger-button {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 390px) {
+  .report-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .report-actions .danger-button {
+    grid-column: auto;
   }
 }

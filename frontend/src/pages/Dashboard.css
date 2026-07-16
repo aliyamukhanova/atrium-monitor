@@ -6,14 +6,17 @@
 
 .dashboard-header {
   display: flex;
+
   align-items: flex-start;
   justify-content: space-between;
+
   gap: 32px;
   margin-bottom: 36px;
 }
 
 .dashboard-header h1 {
   margin: 6px 0 12px;
+
   font-size: clamp(2.3rem, 5vw, 4.5rem);
   line-height: 1;
   letter-spacing: -0.05em;
@@ -22,6 +25,7 @@
 .header-description {
   max-width: 650px;
   margin: 0;
+
   color: #5d6472;
   font-size: 1.05rem;
   line-height: 1.7;
@@ -29,6 +33,7 @@
 
 .eyebrow {
   margin: 0;
+
   color: #4776e6;
   font-size: 0.78rem;
   font-weight: 800;
@@ -38,24 +43,35 @@
 
 .live-badge {
   display: flex;
+
   align-items: center;
+
   gap: 8px;
   padding: 10px 14px;
   border: 1px solid #d9dee9;
   border-radius: 999px;
+
   background: #ffffff;
   color: #48505e;
+
   font-size: 0.88rem;
   white-space: nowrap;
-  box-shadow: 0 8px 30px rgba(30, 45, 75, 0.06);
+
+  box-shadow:
+    0 8px 30px
+    rgba(30, 45, 75, 0.06);
 }
 
 .live-dot {
   width: 9px;
   height: 9px;
+
   border-radius: 50%;
   background: #25a65a;
-  box-shadow: 0 0 0 5px rgba(37, 166, 90, 0.13);
+
+  box-shadow:
+    0 0 0 5px
+    rgba(37, 166, 90, 0.13);
 }
 
 .dashboard-section {
@@ -64,8 +80,10 @@
 
 .section-heading {
   display: flex;
+
   align-items: flex-end;
   justify-content: space-between;
+
   gap: 24px;
   margin-bottom: 16px;
 }
@@ -77,24 +95,67 @@
 
 .section-heading > p {
   margin: 0;
+
   color: #737b89;
   font-size: 0.92rem;
 }
 
+.current-status-card {
+  margin-bottom: 16px;
+  padding: 26px;
+
+  border: 1px solid #cfdaf3;
+  border-radius: 22px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f4f7ff,
+      #e9efff
+    );
+
+  color: #273a6b;
+
+  box-shadow:
+    0 12px 40px
+    rgba(30, 45, 75, 0.06);
+}
+
+.current-status-card h2 {
+  margin: 7px 0 8px;
+  font-size: 1.8rem;
+}
+
+.current-status-description {
+  margin: 0;
+  color: #5f6e93;
+}
+
+.current-stats-grid {
+  margin-top: 16px;
+}
+
 .comfort-card {
   display: flex;
+
+  min-height: 190px;
   align-items: center;
   justify-content: space-between;
+
   gap: 32px;
-  min-height: 190px;
   padding: 32px;
+
   border: 1px solid transparent;
   border-radius: 28px;
-  box-shadow: 0 20px 60px rgba(33, 44, 70, 0.1);
+
+  box-shadow:
+    0 20px 60px
+    rgba(33, 44, 70, 0.1);
 }
 
 .comfort-card h2 {
   margin: 6px 0 8px;
+
   font-size: clamp(2rem, 5vw, 3.4rem);
 }
 
@@ -105,39 +166,72 @@
 
 .comfort-excellent {
   border-color: #a6e3bf;
-  background: linear-gradient(135deg, #effcf4, #dff8e9);
+
+  background:
+    linear-gradient(
+      135deg,
+      #effcf4,
+      #dff8e9
+    );
+
   color: #155d33;
 }
 
 .comfort-good {
   border-color: #b9d3ff;
-  background: linear-gradient(135deg, #f0f6ff, #e1ecff);
+
+  background:
+    linear-gradient(
+      135deg,
+      #f0f6ff,
+      #e1ecff
+    );
+
   color: #214e9b;
 }
 
 .comfort-fair {
   border-color: #f5d58a;
-  background: linear-gradient(135deg, #fff9e9, #fff0c6);
+
+  background:
+    linear-gradient(
+      135deg,
+      #fff9e9,
+      #fff0c6
+    );
+
   color: #7b5813;
 }
 
 .comfort-poor {
   border-color: #f0b4b4;
-  background: linear-gradient(135deg, #fff1f1, #ffdede);
+
+  background:
+    linear-gradient(
+      135deg,
+      #fff1f1,
+      #ffdede
+    );
+
   color: #8e2929;
 }
 
 .comfort-score-circle {
   display: flex;
+
   width: 132px;
   height: 132px;
   flex: 0 0 132px;
-  flex-direction: column;
+
   align-items: center;
   justify-content: center;
+  flex-direction: column;
+
   border: 10px solid currentColor;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.55);
+
+  background:
+    rgba(255, 255, 255, 0.55);
 }
 
 .comfort-score-circle span {
@@ -148,33 +242,46 @@
 
 .comfort-score-circle small {
   margin-top: 5px;
+
   font-weight: 700;
   opacity: 0.65;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
   gap: 16px;
 }
 
 .stat-card {
+  min-width: 0;
   padding: 24px;
+
   border: 1px solid #e2e6ee;
   border-radius: 22px;
+
   background: #ffffff;
-  box-shadow: 0 12px 40px rgba(30, 45, 75, 0.06);
+
+  box-shadow:
+    0 12px 40px
+    rgba(30, 45, 75, 0.06);
 }
 
 .card-label {
   margin: 0;
+
   color: #6a7280;
   font-size: 0.87rem;
   font-weight: 700;
 }
 
 .stat-value {
+  overflow-wrap: anywhere;
+
   margin: 14px 0 0;
+
   color: #1f2633;
   font-size: 2rem;
   font-weight: 800;
@@ -183,6 +290,7 @@
 
 .stat-unit {
   margin-left: 4px;
+
   color: #6f7785;
   font-size: 1rem;
   font-weight: 700;
@@ -190,25 +298,42 @@
 
 .recommendation-card {
   display: flex;
+
   align-items: center;
+
   gap: 24px;
   padding: 28px;
+
   border: 1px solid #ded9ff;
   border-radius: 24px;
-  background: linear-gradient(135deg, #f7f5ff, #ece8ff);
+
+  background:
+    linear-gradient(
+      135deg,
+      #f7f5ff,
+      #ece8ff
+    );
+
   color: #352d73;
 }
 
 .recommendation-icon {
   display: grid;
+
   width: 72px;
   height: 72px;
   flex: 0 0 72px;
+
   place-items: center;
+
   border-radius: 20px;
   background: #ffffff;
+
   font-size: 2rem;
-  box-shadow: 0 12px 30px rgba(72, 55, 150, 0.12);
+
+  box-shadow:
+    0 12px 30px
+    rgba(72, 55, 150, 0.12);
 }
 
 .recommendation-card h2 {
@@ -224,9 +349,11 @@
 
 .message-card {
   display: grid;
+
   min-height: 400px;
   place-items: center;
   align-content: center;
+
   padding: 40px;
   text-align: center;
 }
@@ -238,9 +365,11 @@
 .loading-spinner {
   width: 42px;
   height: 42px;
+
   border: 5px solid #d9e2f4;
   border-top-color: #4776e6;
   border-radius: 50%;
+
   animation: spin 0.8s linear infinite;
 }
 
@@ -250,41 +379,175 @@
   }
 }
 
-@media (max-width: 850px) {
-  .dashboard-header,
-  .section-heading {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
+@media (max-width: 900px) {
   .stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 720px) {
   .dashboard-page {
     width: min(100% - 24px, 1180px);
-    padding-top: 30px;
+    padding: 28px 0 32px;
   }
 
-  .comfort-card {
+  .dashboard-header {
     align-items: flex-start;
     flex-direction: column;
+
+    gap: 16px;
+    margin-bottom: 22px;
   }
 
-  .comfort-score-circle {
-    width: 110px;
-    height: 110px;
-    flex-basis: 110px;
+  .dashboard-header .eyebrow {
+    font-size: 0.7rem;
+  }
+
+  .dashboard-header h1 {
+    margin-bottom: 10px;
+
+    font-size: clamp(2.2rem, 11vw, 3.4rem);
+    line-height: 1.02;
+  }
+
+  .header-description {
+    max-width: 32ch;
+
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .live-badge {
+    width: fit-content;
+    padding: 9px 12px;
+
+    font-size: 0.82rem;
+    white-space: normal;
+  }
+
+  .dashboard-section {
+    margin-top: 18px;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .section-heading h2 {
+    font-size: 1.3rem;
+  }
+
+  .section-heading > p {
+    font-size: 0.82rem;
+  }
+
+  .current-status-card {
+    padding: 20px;
+    border-radius: 18px;
+  }
+
+  .current-status-card h2 {
+    max-width: 15ch;
+
+    font-size: 1.65rem;
+    line-height: 1.15;
   }
 
   .stats-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .stats-grid.current-stats-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .stat-card {
+    min-height: 112px;
+    padding: 18px;
+    border-radius: 17px;
+  }
+
+  .current-stats-grid .stat-card {
+    min-height: 118px;
+  }
+
+  .stat-value {
+    margin-top: 10px;
+    font-size: 1.6rem;
+  }
+
+  .current-stats-grid .stat-value {
+    font-size: 1.45rem;
+  }
+
+  .comfort-card {
+    min-height: 0;
+
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 20px;
+    padding: 20px;
+    border-radius: 19px;
+  }
+
+  .comfort-card h2 {
+    font-size: 2rem;
+  }
+
+  .comfort-score-circle {
+    width: 106px;
+    height: 106px;
+    flex-basis: 106px;
+
+    border-width: 8px;
+  }
+
+  .comfort-score-circle span {
+    font-size: 2.1rem;
   }
 
   .recommendation-card {
     align-items: flex-start;
     flex-direction: column;
+
+    gap: 16px;
+    padding: 20px;
+    border-radius: 19px;
+  }
+
+  .recommendation-icon {
+    width: 58px;
+    height: 58px;
+    flex-basis: 58px;
+
+    border-radius: 15px;
+    font-size: 1.6rem;
+  }
+
+  .recommendation-card h2 {
+    font-size: 1.65rem;
+  }
+
+  .message-card {
+    min-height: 300px;
+    padding: 28px 18px;
+  }
+}
+
+@media (max-width: 390px) {
+  .stats-grid.current-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .current-stats-grid .stat-card {
+    min-height: 100px;
   }
 }

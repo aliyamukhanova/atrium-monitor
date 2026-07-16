@@ -24,13 +24,17 @@ const initialFilters: ReadingFilters = {
   sortOrder: "desc",
 };
 
-function formatLocation(location: Reading["location"]): string {
+function formatLocation(
+  location: Reading["location"],
+): string {
   return location === "atrium"
     ? "Atrium"
     : "Outside";
 }
 
-function formatCategory(value: string | null): string {
+function formatCategory(
+  value: string | null,
+): string {
   if (!value) {
     return "Not available";
   }
@@ -47,7 +51,9 @@ function formatCategory(value: string | null): string {
 
 export default function HistoryPage() {
   const [filters, setFilters] =
-    useState<ReadingFilters>(initialFilters);
+    useState<ReadingFilters>(
+      initialFilters,
+    );
 
   const [readings, setReadings] =
     useState<Reading[]>([]);
@@ -419,60 +425,115 @@ export default function HistoryPage() {
         {!error &&
           !loading &&
           readings.length > 0 && (
-            <div className="table-container">
-              <table className="readings-table">
-                <thead>
-                  <tr>
-                    <th>Date and time</th>
-                    <th>Location</th>
-                    <th>Temperature</th>
-                    <th>Brightness</th>
-                    <th>Noise</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {readings.map((reading) => (
-                    <tr key={reading.id}>
-                      <td>
-                        {new Date(
-                          reading.measured_at,
-                        ).toLocaleString()}
-                      </td>
-
-                      <td>
-                        <span
-                          className={`location-badge location-${reading.location}`}
-                        >
-                          {formatLocation(
-                            reading.location,
-                          )}
-                        </span>
-                      </td>
-
-                      <td>
-                        <strong>
-                          {reading.temperature}
-                          °C
-                        </strong>
-                      </td>
-
-                      <td>
-                        {formatCategory(
-                          reading.brightness,
-                        )}
-                      </td>
-
-                      <td>
-                        {formatCategory(
-                          reading.noise,
-                        )}
-                      </td>
+            <>
+              <div className="table-container">
+                <table className="readings-table">
+                  <thead>
+                    <tr>
+                      <th>Date and time</th>
+                      <th>Location</th>
+                      <th>Temperature</th>
+                      <th>Brightness</th>
+                      <th>Noise</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+
+                  <tbody>
+                    {readings.map(
+                      (reading) => (
+                        <tr key={reading.id}>
+                          <td>
+                            {new Date(
+                              reading.measured_at,
+                            ).toLocaleString()}
+                          </td>
+
+                          <td>
+                            <span
+                              className={`location-badge location-${reading.location}`}
+                            >
+                              {formatLocation(
+                                reading.location,
+                              )}
+                            </span>
+                          </td>
+
+                          <td>
+                            <strong>
+                              {reading.temperature}
+                              °C
+                            </strong>
+                          </td>
+
+                          <td>
+                            {formatCategory(
+                              reading.brightness,
+                            )}
+                          </td>
+
+                          <td>
+                            {formatCategory(
+                              reading.noise,
+                            )}
+                          </td>
+                        </tr>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mobile-readings-list">
+                {readings.map((reading) => (
+                  <article
+                    className="mobile-reading-card"
+                    key={reading.id}
+                  >
+                    <div className="mobile-reading-header">
+                      <span
+                        className={`location-badge location-${reading.location}`}
+                      >
+                        {formatLocation(
+                          reading.location,
+                        )}
+                      </span>
+
+                      <strong>
+                        {reading.temperature}°C
+                      </strong>
+                    </div>
+
+                    <time>
+                      {new Date(
+                        reading.measured_at,
+                      ).toLocaleString()}
+                    </time>
+
+                    <dl>
+                      <div>
+                        <dt>Brightness</dt>
+
+                        <dd>
+                          {formatCategory(
+                            reading.brightness,
+                          )}
+                        </dd>
+                      </div>
+
+                      <div>
+                        <dt>Noise</dt>
+
+                        <dd>
+                          {formatCategory(
+                            reading.noise,
+                          )}
+                        </dd>
+                      </div>
+                    </dl>
+                  </article>
+                ))}
+              </div>
+            </>
           )}
       </section>
     </main>
