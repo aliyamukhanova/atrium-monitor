@@ -2,7 +2,7 @@
 
 set -e
 
-python app/telegram/telethon.py &
+python3 -m app.telegram.listener &
 
 exec uvicorn app.main:app \
   --host 0.0.0.0 \
