@@ -334,33 +334,6 @@ noise = mild
 
 ---
 
-# Implemented Features
-
-## Mandatory Features
-
-- Current atrium conditions
-- Outside temperature display
-- Historical measurements table
-- Filtering and sorting
-- FastAPI REST API
-- SQLite database
-- Telegram integration
-- Responsive web interface
-
-## Bonus Features
-
-- Comfort score
-- Smart activity recommendation
-- Best study period prediction
-- Temperature analytics
-- Noise analytics
-- Brightness analytics
-- User reports
-- Report resolution workflow
-- Telegram message normalization
-- Automatic dashboard updates
-
----
 
 # Technology Stack
 
