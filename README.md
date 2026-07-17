@@ -1,63 +1,286 @@
 # Atrium Monitor
 
-Atrium Monitor is a smart environmental monitoring dashboard designed for Nazarbayev University study spaces. The application collects environmental sensor readings from a Telegram channel, stores them in a database, analyzes current and historical conditions, and provides recommendations for students about where and when to study.
+Atrium Monitor is a smart environmental monitoring dashboard designed for Nazarbayev University study spaces.
+
+The application collects environmental sensor readings from a Telegram channel, stores them in a database, analyzes current and historical conditions, and provides recommendations about where and when students should study.
+
+The system consists of:
+
+- A React frontend dashboard
+- A FastAPI backend API
+- A Telegram listener using Telethon
+- A SQLite database for persistent storage
 
 ---
 
-## Features
+# Deployed Application
 
-### Current Conditions
+- Frontend: https://YOUR-VERCEL-URL.vercel.app
+- Backend API: https://YOUR-RAILWAY-URL.up.railway.app
+- API Documentation: https://YOUR-RAILWAY-URL.up.railway.app/docs
 
-- Displays the latest atrium temperature, brightness, and noise level.
-- Displays the latest available outside temperature.
-- Generates a real-time status description of the atrium environment.
+---
 
-### Smart Activity Recommendation
+# Features
 
-Based on the latest sensor data, Atrium Monitor recommends whether students should:
+## Current Conditions
+
+Atrium Monitor displays:
+
+- Latest atrium temperature
+- Latest atrium brightness level
+- Latest atrium noise level
+- Latest outside temperature
+- Current atrium status description
+
+---
+
+## Smart Activity Recommendation
+
+Based on the latest environmental conditions, Atrium Monitor recommends whether students should:
 
 - 📚 Study in the atrium
 - 🌳 Go outside
 - 🏠 Relax in the dorm
 
-The recommendation is determined using:
+The recommendation considers:
 
 - Atrium comfort score
-- Noise level
-- Brightness level
-- Atrium temperature
+- Temperature
+- Brightness
+- Noise
 - Outside temperature
 
-### Comfort Score
+---
 
-The comfort score is calculated only from the latest **complete atrium reading**, which includes:
+## Comfort Score Calculation
+
+The comfort score is calculated only from the latest complete atrium reading containing:
 
 - Temperature
 - Brightness
 - Noise
 
-The score ranges from 0 to 100 and is used to classify the environment as:
+Partial atrium readings and outside readings do not contribute to the score.
 
-- Excellent
-- Good
-- Fair
-- Poor
+Each environmental factor is first converted into a subscore from 0 to 100.
 
-### Best Study Period Prediction
+### Temperature Score
 
-Atrium Monitor predicts the best study hour using a lightweight prediction model based on:
+| Atrium temperature | Temperature score |
+|-------------------|------------------|
+| 24°C – 28°C | 100 |
+| 22°C – 30°C | 80 |
+| 20°C – 32°C | 60 |
+| Below 20°C or above 32°C | 40 |
 
-- Current daily trends
-- Hourly consistency
+### Noise Score
 
-The model only considers:
+| Noise level | Noise score |
+|------------|------------|
+| Quiet | 100 |
+| Mild | 70 |
+| Noisy | 40 |
+| Very noisy | 20 |
+| Unknown value | 50 |
 
-- Complete atrium readings
-- Realistic study hours (08:00–22:00)
+### Brightness Score
 
-No machine learning models are used.
+| Brightness level | Brightness score |
+|-----------------|-----------------|
+| Normal | 100 |
+| Bright | 80 |
+| Dim | 70 |
+| Very bright | 60 |
+| Dark | 50 |
+| Unknown value | 50 |
 
-### Analytics Dashboard
+### Final Comfort Score
+
+```text
+Comfort Score =
+Temperature Score × 0.50
++ Brightness Score × 0.25
++ Noise Score × 0.25
+```
+
+Temperature contributes 50% of the score because thermal comfort is considered the most important environmental factor.
+
+The final result is rounded to the nearest integer.
+
+### Comfort Classification
+
+| Score | Status |
+|------|-------|
+| 90 – 100 | Excellent |
+| 70 – 89 | Good |
+| 40 – 69 | Fair |
+| Below 40 | Poor |
+
+---
+
+## Current Activity Recommendation
+
+Atrium Monitor generates a recommendation describing what students should do **right now**.
+
+The recommendation uses:
+
+- The latest complete atrium reading
+- The latest outside temperature
+- The atrium comfort score
+
+The recommendation is selected using the following decision order:
+
+### 1. Study in the Atrium
+
+The application recommends studying in the atrium when all of the following conditions are satisfied:
+
+- Comfort score is at least 75
+- Noise level is `quiet` or `mild`
+- Brightness is `dim`, `normal`, or `bright`
+- Atrium temperature is between `22°C` and `29°C`
+
+This recommendation has the highest priority.
+
+### 2. Go Outside
+
+If the atrium is not suitable for studying, the application checks whether outdoor conditions are suitable.
+
+The application recommends going outside when:
+
+- Outside temperature is between `17°C` and `28°C`
+- And at least one of the following is true:
+  - Comfort score is below 75
+  - Atrium noise level is unsuitable for studying
+  - Atrium temperature is unsuitable for studying
+  - Outside is at least 2°C cooler than the atrium
+
+### 3. Relax in the Dorm
+
+The application recommends relaxing in the dorm when neither the atrium nor outdoor conditions are suitable.
+
+---
+
+## Best Study Period Prediction
+
+Atrium Monitor predicts the best hour for studying using an explainable, rule-based forecasting algorithm. No machine learning model is currently used.
+
+The model uses only readings that:
+
+- Come from the atrium
+- Include temperature, brightness, and noise
+- Were recorded between `08:00` and `21:59`
+- Belong to the most recent seven-day period ending on the latest available day with complete atrium data
+
+At least two readings must exist for an hour before that hour can be considered.
+
+### 1. Historical Comfort Score
+
+Each reading is converted into a comfort score using the scoring rules above.
+
+Readings are grouped by hour.
+
+More recent readings receive more weight:
+
+```text
+Latest day: weight 7
+1 day old: weight 6
+2 days old: weight 5
+3 days old: weight 4
+4 days old: weight 3
+5 days old: weight 2
+6 days old: weight 1
+```
+
+The weighted historical score is calculated as:
+
+```text
+Historical Score =
+sum(comfort score × recency weight)
+÷ sum(recency weights)
+```
+
+### 2. Current Daily Trend
+
+The model estimates whether conditions on the latest day are improving or worsening.
+
+The latest day's readings are split into:
+
+- Earlier readings
+- Later readings
+
+The trend is calculated as:
+
+```text
+Current Trend =
+average comfort of later readings
+− average comfort of earlier readings
+```
+
+Positive values indicate improving conditions.
+
+Negative values indicate worsening conditions.
+
+The trend adjustment is limited to:
+
+```text
+-15 to +15
+```
+
+The trend-adjusted score is:
+
+```text
+Trend-adjusted Score =
+Historical Score + Current Trend
+```
+
+### 3. Hourly Consistency
+
+The algorithm prefers hours that historically exhibit stable environmental conditions.
+
+Consistency is calculated using the population standard deviation:
+
+```text
+Consistency Score =
+100 − population standard deviation × 4
+```
+
+The result is limited to the range from 0 to 100.
+
+### 4. Final Predicted Score
+
+```text
+Predicted Score =
+Historical Score × 0.65
++ Trend-adjusted Score × 0.20
++ Consistency Score × 0.15
+```
+
+Therefore:
+
+- Historical conditions contribute 65%
+- Current daily trend contributes 20%
+- Hourly consistency contributes 15%
+
+The hour with the highest predicted score becomes the recommended study period.
+
+### Prediction Confidence
+
+The recommendation also receives a confidence level:
+
+- **High confidence:** at least 6 readings and consistency score ≥ 80
+- **Medium confidence:** at least 3 readings and consistency score ≥ 60
+- **Low confidence:** all other cases
+
+If insufficient data is available, the system returns:
+
+```text
+Not enough complete atrium data
+```
+
+---
+
+## Analytics Dashboard
 
 Users can:
 
@@ -70,18 +293,22 @@ Users can:
 - Analyze noise trends
 - Navigate between different days
 
-### History Page
+---
+
+## History Page
 
 The history page supports:
 
 - Filtering by date
 - Filtering by location
-- Filtering by noise level
 - Filtering by brightness level
+- Filtering by noise level
 - Sorting by time
 - Sorting by temperature
 
-### Telegram Integration
+---
+
+## Telegram Integration
 
 Atrium Monitor automatically receives sensor updates from a Telegram channel using Telethon.
 
@@ -96,7 +323,7 @@ Example:
 🔉 Mild noise
 ```
 
-becomes:
+is stored as:
 
 ```text
 location = atrium
@@ -107,40 +334,64 @@ noise = mild
 
 ---
 
-## Technology Stack
+# Implemented Features
 
-### Frontend
+## Mandatory Features
+
+- Current atrium conditions
+- Outside temperature display
+- Historical measurements table
+- Filtering and sorting
+- FastAPI REST API
+- SQLite database
+- Telegram integration
+- Responsive web interface
+
+## Bonus Features
+
+- Comfort score
+- Smart activity recommendation
+- Best study period prediction
+- Temperature analytics
+- Noise analytics
+- Brightness analytics
+- User reports
+- Report resolution workflow
+- Telegram message normalization
+- Automatic dashboard updates
+
+---
+
+# Technology Stack
+
+## Frontend
 
 - React
 - TypeScript
 - Vite
 - CSS
+- Recharts
 
-### Backend
+## Backend
 
 - FastAPI
 - SQLAlchemy
 - SQLite
 - Pydantic
 
-### Data Collection
+## Data Collection
 
 - Telethon
 - Telegram API
 
-### Data Visualization
-
-- Recharts
-
 ---
 
-## Project Structure
+# Project Structure
 
 ```text
 atrium-monitor/
 │
 ├── backend/
-│   │
 │   ├── app/
 │   │   ├── routes/
 │   │   │   ├── readings.py
@@ -152,7 +403,8 @@ atrium-monitor/
 │   │   │   └── recommendations.py
 │   │   │
 │   │   ├── telegram/
-│   │   │   └── telethon.py
+│   │   │   ├── __init__.py
+│   │   │   └── listener.py
 │   │   │
 │   │   ├── crud.py
 │   │   ├── database.py
@@ -165,37 +417,15 @@ atrium-monitor/
 │   └── seed.py
 │
 ├── frontend/
-│   │
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── ComfortCard.tsx
-│   │   │   ├── RecommendationCard.tsx
-│   │   │   ├── StatCard.tsx
-│   │   │   └── TemperatureChart.tsx
-│   │   │
 │   │   ├── pages/
-│   │   │   ├── Dashboard.tsx
-│   │   │   ├── Dashboard.css
-│   │   │   ├── AnalyticsPage.tsx
-│   │   │   ├── AnalyticsPage.css
-│   │   │   ├── HistoryPage.tsx
-│   │   │   ├── HistoryPage.css
-│   │   │   ├── ReportsPage.tsx
-│   │   │   └── ReportsPage.css
-│   │   │
 │   │   ├── services/
-│   │   │   └── api.ts
-│   │   │
 │   │   ├── types/
-│   │   │   └── api.ts
-│   │   │
 │   │   ├── App.tsx
-│   │   ├── App.css
-│   │   ├── main.tsx
-│   │   └── index.css
+│   │   └── main.tsx
 │   │
 │   ├── package.json
-│   ├── package-lock.json
 │   └── vite.config.ts
 │
 ├── README.md
@@ -204,9 +434,9 @@ atrium-monitor/
 
 ---
 
-## Installation
+# Installation
 
-### Clone the repository
+## Clone the repository
 
 ```bash
 git clone https://github.com/aliyamukhanova/atrium-monitor.git
@@ -215,30 +445,24 @@ cd atrium-monitor
 
 ---
 
-### Backend Setup
-
-Create and activate a virtual environment:
+## Backend Setup
 
 ```bash
 cd backend
 
 python -m venv venv
 source venv/bin/activate
-```
 
-Install dependencies:
-
-```bash
 pip install -r requirements.txt
 ```
 
-Start the FastAPI server:
+Start FastAPI:
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-The backend will run on:
+Backend runs on:
 
 ```text
 http://127.0.0.1:8000
@@ -246,7 +470,7 @@ http://127.0.0.1:8000
 
 ---
 
-### Frontend Setup
+## Frontend Setup
 
 ```bash
 cd frontend
@@ -255,7 +479,7 @@ npm install
 npm run dev
 ```
 
-The frontend will run on:
+Frontend runs on:
 
 ```text
 http://localhost:5173
@@ -263,27 +487,23 @@ http://localhost:5173
 
 ---
 
-### Telegram Listener
+## Telegram Listener
 
-Create a `.env` file inside:
-
-```text
-backend/app/telegram/
-```
-
-with the following contents:
+Create a `.env` file inside the `backend` directory:
 
 ```env
 API_ID=your_api_id
 API_HASH=your_api_hash
 CHANNEL_NAME=your_channel_name
+TELEGRAM_SESSION=your_session_string
+LOCAL_TIMEZONE=Asia/Almaty
 ```
 
-Start the Telegram listener:
+Start the listener:
 
 ```bash
 cd backend
-python app/telegram/telethon.py
+python3 -m app.telegram.listener
 ```
 
 ---
